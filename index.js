@@ -8,26 +8,28 @@ bot.login(config.BOT_TOKEN);
 bot.on("message", (async msg => {
     const lotteryChannel = bot.channels.cache.find(channel => channel.id === "733683187649347614");
     const triggerChannel = '273624137530867712';
+    if (msg.author.bot || msg.channel.id !== triggerChannel) return;
     await initialConversation(msg, triggerChannel);
-    await deleteMsg(msg, triggerChannel);
-    notifyChannel(msg, lotteryChannel);
+    await deleteMsg(msg);
+    notifyChannel(msg, lotteryChannel,bot);
 
 }));
 
-function initialConversation(message, triggerChannel) {
-    if (message.author.bot) return;
-    return message.channel.id === triggerChannel ? message.author.send("Your booking requrest has been processed, an advertiser will be with you shortly.") : "";
+function initialConversation(message) {
+    message.author.send("Your booking requrest has been processed, an advertiser will be with you shortly.");
 }
 
-function deleteMsg(message, triggerChannel) {
-    return message.channel.id === triggerChannel ? message.delete({
-            timeout: 1000
+function deleteMsg(message) {
+    message.delete({
+            timeout: 500
         })
-        .then(msg => console.log(`Deleted message from ${msg.author.username} (id = ${msg.author.id})after 1 second`))
-        .catch(console.error) : "";
+        .then(msg => {
+            console.log(`Deleted message from ${msg.author.username} after .5 seconds`)}
+            )
+        .catch(console.error);
 }
 
-async function notifyChannel(message, destChannel) {
+async function notifyChannel(message, destChannel,bot) {
     if (message.author.bot) return;
     let players = [];
     let requestorObject = {
@@ -46,19 +48,19 @@ async function notifyChannel(message, destChannel) {
         await msg.react("✅");
 
         const collector = msg.createReactionCollector(filter, {
-            time: 5000
+            time: 10000
         });
 
         collector.on('collect', (reaction, user) => {
-            console.log(user.id);
-            players.push(user.id);
+            if(!(players.includes(user.id))){
+                players.push(user.id);
+            }
         });
 
         collector.on('end', collect => {
-            console.log("in collector on")
             shuffle(players);
             returnObj["selectedAdvertiserID"] = shuffle(players).shift();
-            messageWinners(returnObj);
+            messageWinners(returnObj,bot);
         });
     });
 }
@@ -79,10 +81,11 @@ function shuffle(array) {
     return array;
 }
 
-function messageWinners(winnersObject) {
-    let selectedAdvertiser = winnersObject["selectedAdvertiserID"];
-    let originalRequestor = winnersObject["requestor"];
+async function messageWinners(winnersObject) {
+    
+    let originalRequestor = await bot.users.fetch(winnersObject["requestor"].messageID);
+    let selectedAdvertiser = await bot.users.fetch(winnersObject["selectedAdvertiserID"]);
 
-    selectedAdvertiser.send(`You have been selected to help ${originalRequestor.messageID} with the request of: ${originalRequestor.messageID}`);
+    selectedAdvertiser.send(`You have been selected to help ${originalRequestor} with the request of: \n ${winnersObject["requestor"].messageContent}`);
     originalRequestor.send(`${selectedAdvertiser} has been selected to assist you with your boost request. Please ensure within your Privacy & Safety settings you are allowing direct messages from server members!`);
 }
