@@ -15,13 +15,11 @@ bot.on("message", (async msg => {
 }));
 
 function initialConversation(message, triggerChannel) {
-    console.log("initialConversation")
     if (message.author.bot) return;
     return message.channel.id === triggerChannel ? message.author.send("Your booking requrest has been processed, an advertiser will be with you shortly.") : "";
 }
 
 function deleteMsg(message, triggerChannel) {
-    console.log("deleteMsg")
     return message.channel.id === triggerChannel ? message.delete({
             timeout: 1000
         })
@@ -30,7 +28,6 @@ function deleteMsg(message, triggerChannel) {
 }
 
 async function notifyChannel(message, destChannel) {
-    console.log("notifyChannel")
     if (message.author.bot) return;
     let players = [];
     let requestorObject = {
@@ -67,7 +64,6 @@ async function notifyChannel(message, destChannel) {
 }
 
 function shuffle(array) {
-    console.log("shuffle")
     var currentIndex = array.length,
         temporaryValue, randomIndex;
 
@@ -84,7 +80,6 @@ function shuffle(array) {
 }
 
 function messageWinners(winnersObject) {
-    console.log("messageWinners")
     let selectedAdvertiser = winnersObject["selectedAdvertiserID"];
     let originalRequestor = winnersObject["requestor"];
 
