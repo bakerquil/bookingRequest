@@ -1,55 +1,90 @@
 const Discord = require("discord.js");
 const config = require("./config.json");
 
-const client = new Discord.Client();
+const bot = new Discord.Client();
 
-client.login(config.BOT_TOKEN);
+bot.login(config.BOT_TOKEN);
 
-client.on("message", function (message) {
+bot.on("message", (async msg => {
+    const lotteryChannel = bot.channels.cache.find(channel => channel.id === "733683187649347614");
+    const triggerChannel = '273624137530867712';
+    await initialConversation(msg,triggerChannel);
+    await deleteMsg(msg,triggerChannel);
+    let selectedObject = await notifyChannel(msg, lotteryChannel);
+    await messageWinners(selectedObject);
+}));
 
-    const lotteryChannel = client.channels.cache.find(channel => channel.id === "818571392789905458")
-    const filter = (reaction, user) => {
-        return reaction.emoji.name === "✅" && user.id !== message.author.id
+function initialConversation(message,triggerChannel) {
+    console.log("initialConversation")
+    if (message.author.bot) return;
+    return message.channel.id === triggerChannel ? message.author.send("Your booking requrest has been processed, an advertiser will be with you shortly.") : "";
+}
+
+function deleteMsg(message,triggerChannel) {
+    console.log("deleteMsg")
+    return message.channel.id === triggerChannel ? message.delete({
+            timeout: 1000
+        })
+        .then(msg => console.log(`Deleted message from ${msg.author.username} (id = ${msg.author.id})after 1 second`))
+        .catch(console.error) : "";
+}
+
+async function notifyChannel(message, destChannel) {
+    console.log("notifyChannel")
+    if (message.author.bot) return;
+    let players = [];
+    let requestorObject = {
+        "messageID":message.author.id,
+        "messageContent":message.content
     }
-    const collector = message.createReactionCollector(filter, { time: 10000 });
-
-    async function startLottery() {
-        let playerList = []
-        let newCustomer = message.author
-        if (message.channel.id === "818570774763274270") {
-            // dm's the person requesting a boost
-
-            message.author.send("Your booking requrest has been processed, an advertiser will be with you shortly.")
-            message.delete({ timeout: 1000 })
-                .then(msg => console.log(`Deleted message from ${msg.author.username} after 1 second`))
-                .catch(console.error);
-            // sends the msg to the adv channel and posts the checkmark for the react sign up 
-            lotteryChannel.send(`${message.author} has requested a boost react to sign-up `).then(msg => {
-                msg.react("✅")
-                
-                collector.on("collect", (reaction, user) => {
-                    console.log(`Collected ${user.tag}`)
-                    playerList.push(user.tag)
-
-                })
-                collector.on("end", collected => {
-                    console.log(playerList)
-                    collector.stop()
-
-                })
-            })
-
-        }
-
-
+    let returnObj ={
+        "requestor":requestorObject,
+        "selectedAdvertiserID":''
+    };
+    const filter = (user) => {
+        return (user.id !== message.author.id);
     }
+    await destChannel.send(`${message.author} has requested a boost react to sign-up `).then(async msg => {
 
+        await msg.react("✅");
 
+        const collector = msg.createReactionCollector(filter, {
+            time: 5000
+        });
 
+        await collector.on('collect', (reaction, user) => {
+            console.log(user.id);
+            players.push(user.id);
+        });
 
+        await collector.on('end', collect =>{
+            console.log("in collector on")
+            shuffle(players);
+            returnObj["selectedAdvertiserID"]  = shuffle(players).shift();
+        })
 
-
-
-
-    startLottery();
-});
+    });
+    return returnObj;
+}
+function shuffle(array) {
+    console.log("shuffle")
+    var currentIndex = array.length, temporaryValue, randomIndex;
+  
+    while (0 !== currentIndex) {
+  
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+  
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+    return array;
+}
+function messageWinners (winnersObject){
+    let selectedAdvertiser = winnersObject["selectedAdvertiserID"];
+    let originalRequestor = winnersObject["requestor"];
+    
+    selectedAdvertiser.send(`You have been selected to help ${originalRequestor.messageID} with the request of: ${originalRequestor.messageID}`);
+    originalRequestor.send(`${selectedAdvertiser} has been selected to assist you with your boost request. Please ensure within your Privacy & Safety settings you are allowing direct messages from server members!`);
+}
