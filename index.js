@@ -4,10 +4,13 @@ const config = require("./config.json");
 const bot = new Discord.Client();
 
 bot.login(config.BOT_TOKEN);
+let lotteryChannelID = "CHANGE THIS VALUE";
+let triggerChannelID = "CHANGE THIS VALUE";
+
 
 bot.on("message", (async msg => {
-    const lotteryChannel = bot.channels.cache.find(channel => channel.id === "733683187649347614");
-    const triggerChannel = '273624137530867712';
+    const lotteryChannel = bot.channels.cache.find(channel => channel.id === lotteryChannelID);
+    const triggerChannel = triggerChannelID;
     if (msg.author.bot || msg.channel.id !== triggerChannel) return;
     await initialConversation(msg, triggerChannel);
     await deleteMsg(msg);
@@ -16,7 +19,7 @@ bot.on("message", (async msg => {
 }));
 
 function initialConversation(message) {
-    message.author.send("Your booking requrest has been processed, an advertiser will be with you shortly.");
+    message.author.send("Your booking request has been processed, an advertiser will be with you shortly.");
 }
 
 function deleteMsg(message) {
