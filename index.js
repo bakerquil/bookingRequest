@@ -7,7 +7,6 @@ bot.login(config.BOT_TOKEN);
 let lotteryChannelID = "733683187649347614";
 let triggerChannelID = "273624137530867712";
 
-//*advertiser that was selected to help the booker notifyChannel / booker request in notify channel message / 30 seconds to react!*/
 bot.on("message", (async msg => {
     const lotteryChannel = bot.channels.cache.find(channel => channel.id === lotteryChannelID);
     const triggerChannel = triggerChannelID;
@@ -46,7 +45,7 @@ async function notifyChannel(message, destChannel,bot) {
     const filter = (user) => {
         return (user.id !== message.author.id);
     }
-    await destChannel.send(`${message.author} has requested a boost react to sign-up `).then(async msg => {
+    await destChannel.send(`${message.author} has requested the following:\n\n ${message.content} \n\nYou have 30 seconds to react!`).then(async msg => {
 
         await msg.react("✅");
 
@@ -63,7 +62,7 @@ async function notifyChannel(message, destChannel,bot) {
         collector.on('end', collect => {
             shuffle(players);
             returnObj["selectedAdvertiserID"] = shuffle(players).shift();
-            messageWinners(returnObj,bot);
+            messageWinners(returnObj,destChannel);
         });
     });
 }
@@ -84,11 +83,12 @@ function shuffle(array) {
     return array;
 }
 
-async function messageWinners(winnersObject) {
+async function messageWinners(winnersObject, destinationChannel) {
     
     let originalRequestor = await bot.users.fetch(winnersObject["requestor"].messageID);
     let selectedAdvertiser = await bot.users.fetch(winnersObject["selectedAdvertiserID"]);
 
+    destinationChannel.send(`${selectedAdvertiser} has been selected to assist ${originalRequestor}!`)
     selectedAdvertiser.send(`You have been selected to help ${originalRequestor} with the request of: \n ${winnersObject["requestor"].messageContent}`);
     originalRequestor.send(`${selectedAdvertiser} has been selected to assist you with your boost request. Please ensure within your Privacy & Safety settings you are allowing direct messages from server members!`);
 }
