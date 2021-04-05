@@ -4,10 +4,10 @@ const config = require("./config.json");
 const bot = new Discord.Client();
 
 bot.login(config.BOT_TOKEN);
-let lotteryChannelID = "CHANGE THIS VALUE";
-let triggerChannelID = "CHANGE THIS VALUE";
+let lotteryChannelID = "733683187649347614";
+let triggerChannelID = "273624137530867712";
 
-
+//*advertiser that was selected to help the booker notifyChannel / booker request in notify channel message / 30 seconds to react!*/
 bot.on("message", (async msg => {
     const lotteryChannel = bot.channels.cache.find(channel => channel.id === lotteryChannelID);
     const triggerChannel = triggerChannelID;
@@ -51,7 +51,7 @@ async function notifyChannel(message, destChannel,bot) {
         await msg.react("✅");
 
         const collector = msg.createReactionCollector(filter, {
-            time: 10000
+            time: 30000
         });
 
         collector.on('collect', (reaction, user) => {
