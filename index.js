@@ -61,6 +61,7 @@ async function notifyChannel(message, destChannel,bot) {
         });
 
         collector.on('end', collect => {
+            //collect reactions at the end rather than each reaction
             shuffle(players);
             returnObj["selectedAdvertiserID"] = shuffle(players).shift();
             messageWinners(returnObj,bot);
